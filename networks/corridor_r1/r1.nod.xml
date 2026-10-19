@@ -20,7 +20,7 @@
     <node id="B1E" x="513.00" y="0.00" type="priority"/>
     <node id="B2E" x="928.00" y="0.00" type="priority"/>
     <node id="B3E" x="1098.00" y="0.00" type="priority"/>
-    <node id="D" x="1318.00" y="0.00" type="zipper"/>
+    <node id="D" x="1318.00" y="0.00" type="priority"/>
     <node id="B4E" x="1388.00" y="0.00" type="priority"/>
     <node id="B4W" x="1522.00" y="0.00" type="priority"/>
     <node id="B3W" x="1222.00" y="0.00" type="priority"/>

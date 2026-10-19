@@ -60,7 +60,10 @@ def test_i3_i4_eastbound_lane_drop(net_lanes, net_root):
     one_lane_section = net_lanes["EB3b"][0] + net_lanes["EB3c"][0]
     assert one_lane_section / JAM == pytest.approx(16)
     node = next(j for j in net_root.findall("junction") if j.get("id") == "D")
-    assert node.get("type") == "zipper"
+    assert node.get("type") == "priority"
+    merges = {(int(c.get("fromLane")), int(c.get("toLane"))) for c in net_root.findall("connection")
+              if c.get("from") == "EB3a" and c.get("to") == "EB3b"}
+    assert merges == {(0, 0), (1, 0)}, "both lanes must merge into the single lane"
 
 
 # DZ 3.3 left-turn bay lengths (m)

@@ -150,7 +150,7 @@ def _nodes(spec: dict) -> list[tuple[str, float, float, str]]:
         ("B1E", xs["I1"] - 75.0 - off, 0.0, "priority"),
         ("B2E", xs["I2"] - 60.0 - off, 0.0, "priority"),
         ("B3E", xs["I3"] - 40.0 - off, 0.0, "priority"),
-        ("D", xs["I4"] - 120.0 - off, 0.0, "zipper"),
+        ("D", xs["I4"] - 120.0 - off, 0.0, "priority"),
         ("B4E", xs["I4"] - 50.0 - off, 0.0, "priority"),
         ("B4W", xs["I4"] + 60.0 + off, 0.0, "priority"),
         ("B3W", xs["I3"] + 60.0 + off, 0.0, "priority"),
@@ -206,7 +206,9 @@ def _connections(spec: dict) -> list[tuple[str, str, int, int]]:
     for a, b in (("EB0a", "EB0b"), ("EB1a", "EB1b"), ("EB2a", "EB2b"),
                  ("WB4a", "WB4b"), ("WB3a", "WB3b"), ("WB2a", "WB2b"), ("WB1a", "WB1b")):
         cons += [(a, b, 0, 0), (a, b, 1, 1), (a, b, 1, 2)]
-    # EB lane drop (zipper merge) and the I4 left bay after it
+    # EB lane drop (both lanes merge into one at a priority node) and the I4
+    # left bay after it. A zipper node was tried first and produced SUMO
+    # emergency braking at the merge; the priority merge does not.
     cons += [("EB3a", "EB3b", 0, 0), ("EB3a", "EB3b", 1, 0)]
     cons += [("EB3b", "EB3c", 0, 0), ("EB3b", "EB3c", 0, 1)]
     # cross-street bays (1 -> 2 lanes)
