@@ -32,7 +32,7 @@
     <connection from="N1in_b" to="EB1a" fromLane="1" toLane="1"/>
     <connection from="N1in_b" to="S1out" fromLane="0" toLane="0"/>
     <connection from="N1in_b" to="WB0" fromLane="0" toLane="0"/>
-    <connection from="N2in" to="EB2a" fromLane="0" toLane="1"/>
+    <connection from="N2in" to="EB2a" fromLane="0" toLane="1" contPos="0"/>
     <connection from="N2in" to="S2out" fromLane="0" toLane="0"/>
     <connection from="N2in" to="WB1a" fromLane="0" toLane="0"/>
     <connection from="N3in_a" to="N3in_b" fromLane="0" toLane="0"/>
@@ -49,7 +49,7 @@
     <connection from="S1in_b" to="WB0" fromLane="1" toLane="1"/>
     <connection from="S2in" to="EB2a" fromLane="0" toLane="0"/>
     <connection from="S2in" to="N2out" fromLane="0" toLane="0"/>
-    <connection from="S2in" to="WB1a" fromLane="0" toLane="1"/>
+    <connection from="S2in" to="WB1a" fromLane="0" toLane="1" contPos="0"/>
     <connection from="S3in_a" to="S3in_b" fromLane="0" toLane="0"/>
     <connection from="S3in_a" to="S3in_b" fromLane="0" toLane="1"/>
     <connection from="S3in_b" to="EB3a" fromLane="0" toLane="0"/>
