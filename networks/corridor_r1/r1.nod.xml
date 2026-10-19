@@ -1,0 +1,29 @@
+<nodes>
+    <node id="W0" x="0.00" y="0.00" type="priority"/>
+    <node id="E0" x="2050.00" y="0.00" type="priority"/>
+    <node id="I1" x="600.00" y="0.00" type="traffic_light"/>
+    <node id="N1end" x="600.00" y="312.00" type="priority"/>
+    <node id="S1end" x="600.00" y="-312.00" type="priority"/>
+    <node id="BN1" x="600.00" y="57.00" type="priority"/>
+    <node id="BS1" x="600.00" y="-57.00" type="priority"/>
+    <node id="I2" x="1000.00" y="0.00" type="traffic_light"/>
+    <node id="N2end" x="1000.00" y="312.00" type="priority"/>
+    <node id="S2end" x="1000.00" y="-312.00" type="priority"/>
+    <node id="I3" x="1150.00" y="0.00" type="traffic_light"/>
+    <node id="N3end" x="1150.00" y="312.00" type="priority"/>
+    <node id="S3end" x="1150.00" y="-312.00" type="priority"/>
+    <node id="BN3" x="1150.00" y="42.00" type="priority"/>
+    <node id="BS3" x="1150.00" y="-42.00" type="priority"/>
+    <node id="I4" x="1450.00" y="0.00" type="traffic_light"/>
+    <node id="N4end" x="1450.00" y="312.00" type="priority"/>
+    <node id="S4end" x="1450.00" y="-312.00" type="priority"/>
+    <node id="B1E" x="513.00" y="0.00" type="priority"/>
+    <node id="B2E" x="928.00" y="0.00" type="priority"/>
+    <node id="B3E" x="1098.00" y="0.00" type="priority"/>
+    <node id="D" x="1318.00" y="0.00" type="zipper"/>
+    <node id="B4E" x="1388.00" y="0.00" type="priority"/>
+    <node id="B4W" x="1522.00" y="0.00" type="priority"/>
+    <node id="B3W" x="1222.00" y="0.00" type="priority"/>
+    <node id="B2W" x="1072.00" y="0.00" type="priority"/>
+    <node id="B1W" x="687.00" y="0.00" type="priority"/>
+</nodes>

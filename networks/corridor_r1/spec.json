@@ -1,0 +1,85 @@
+{
+  "_about": "Corridor R-1 specification for Milestone 1. Source tags: DZ = Document Zero CAD-000 v0.1 fixed assumption [F]; M1 = modeling assumption added for Milestone 1 where Document Zero is silent. Values tagged M1 are placeholders and must be reviewed before any result is reported.",
+  "version": "r1-m1-0.1",
+  "units": {"length": "m", "time": "s", "flow": "veh/h"},
+  "global": {
+    "source": "DZ 3.1-3.2",
+    "posted_speed_mps": 13.89,
+    "jam_spacing_m": 7.5,
+    "saturation_flow_vphpl": 1800,
+    "vehicle": {"source": "M1", "length_m": 5.0, "min_gap_m": 2.5, "accel": 2.6, "decel": 4.5, "sigma": 0.5, "tau": 1.0}
+  },
+  "intersections": {
+    "source": "DZ 3.1, 3.3, 3.5; x positions M1 (from DZ spacing)",
+    "I1": {"x": 600.0, "family": "A", "cross_street": "N1", "phasing": "8-phase"},
+    "I2": {"x": 1000.0, "family": "B", "cross_street": "N2", "phasing": "6-phase"},
+    "I3": {"x": 1150.0, "family": "A", "cross_street": "N3", "phasing": "8-phase"},
+    "I4": {"x": 1450.0, "family": "B", "cross_street": "N4", "phasing": "6-phase", "lpi_s": 5.0}
+  },
+  "mainline_links": {
+    "source": "DZ 3.2 usable storage; edge split at bay starts and the EB lane drop is M1",
+    "_note": "Each link lists its edges from upstream to downstream. length_m is the usable length assigned to the SUMO edge (SUMO 'length' override), so usable storage per lane = sum(lengths)/jam_spacing.",
+    "EB": [
+      {"from": "W0", "to": "I1", "edges": [{"id": "EB0a", "lanes": 2, "length_m": 525.0}, {"id": "EB0b", "lanes": 3, "length_m": 75.0, "bay": "LT"}], "storage_through_veh_per_lane": 80},
+      {"from": "I1", "to": "I2", "edges": [{"id": "EB1a", "lanes": 2, "length_m": 315.0}, {"id": "EB1b", "lanes": 3, "length_m": 60.0, "bay": "LT"}], "storage_through_veh_per_lane": 50, "system_detector_m_from_upstream": 200},
+      {"from": "I2", "to": "I3", "edges": [{"id": "EB2a", "lanes": 2, "length_m": 80.0}, {"id": "EB2b", "lanes": 3, "length_m": 40.0, "bay": "LT"}], "storage_through_veh_per_lane": 16},
+      {"from": "I3", "to": "I4", "edges": [{"id": "EB3a", "lanes": 2, "length_m": 157.5}, {"id": "EB3b", "lanes": 1, "length_m": 70.0, "lane_drop_upstream": true}, {"id": "EB3c", "lanes": 2, "length_m": 50.0, "bay": "LT"}], "storage_through_veh": {"two_lane_section_per_lane": 21, "one_lane_section": 16}},
+      {"from": "I4", "to": "E0", "edges": [{"id": "EB4", "lanes": 1, "length_m": 600.0}], "exit": true, "_note": "M1: one lane, because only the single EB through/right lane and the NB right turn feed it"}
+    ],
+    "WB": [
+      {"from": "E0", "to": "I4", "edges": [{"id": "WB4a", "lanes": 2, "length_m": 540.0}, {"id": "WB4b", "lanes": 3, "length_m": 60.0, "bay": "LT"}], "storage_through_veh_per_lane": 80},
+      {"from": "I4", "to": "I3", "edges": [{"id": "WB3a", "lanes": 2, "length_m": 217.5}, {"id": "WB3b", "lanes": 3, "length_m": 60.0, "bay": "LT"}], "storage_through_veh_per_lane": 37},
+      {"from": "I3", "to": "I2", "edges": [{"id": "WB2a", "lanes": 2, "length_m": 60.0}, {"id": "WB2b", "lanes": 3, "length_m": 60.0, "bay": "LT"}], "storage_through_veh_per_lane": 16},
+      {"from": "I2", "to": "I1", "edges": [{"id": "WB1a", "lanes": 2, "length_m": 300.0}, {"id": "WB1b", "lanes": 3, "length_m": 75.0, "bay": "LT"}], "storage_through_veh_per_lane": 50, "system_detector_m_from_upstream": 200},
+      {"from": "I1", "to": "W0", "edges": [{"id": "WB0", "lanes": 2, "length_m": 600.0}], "exit": true}
+    ]
+  },
+  "cross_streets": {
+    "source": "DZ 3.3 lane configuration; 300 m modeled leg length is M1",
+    "leg_length_m": 300.0,
+    "I1": {"approach": "TH/RT + LT bay", "bay_m": 45.0},
+    "I2": {"approach": "one shared lane", "bay_m": 0.0, "permissive_left": true},
+    "I3": {"approach": "TH/RT + LT bay", "bay_m": 30.0},
+    "I4": {"approach": "TH/RT only, no left turns", "bay_m": 0.0, "left_prohibited": true}
+  },
+  "timing_constants": {
+    "source": "DZ 3.4",
+    "yellow_mainline_s": 4.0, "yellow_side_s": 3.5,
+    "all_red_mainline_s": 2.0, "all_red_side_s": 1.5,
+    "min_green_through_coordinated_s": 10.0, "min_green_left_s": 5.0, "min_green_side_s": 7.0,
+    "walk_s": 7.0, "ped_clear_mainline_crossing_s": 16.0, "ped_clear_side_crossing_s": 9.0,
+    "lpi_s": 5.0,
+    "cycle_s": {"S0": 80, "S1": 110, "S2": 120, "S3": 120}
+  },
+  "scenarios": {
+    "source": "DZ 4.1-4.4 for entry flows, windows and pulse; turning fractions and per-approach cross volumes are M1, calibrated so the derived EB through/right volume at I4 matches DZ 4.2 within 3%",
+    "master_seed": 20260811,
+    "warmup_s": 900,
+    "S0": {"start": "10:00", "end": "13:00", "eb_entry": 550, "wb_entry": 500, "cross_per_approach": {"I1": 250, "I2": 150, "I3": 200, "I4": 150}, "mainline_through_fraction": 0.85, "derived_eb_th_i4": 430},
+    "S1": {"start": "06:30", "end": "09:30", "eb_entry": 1450, "wb_entry": 1050, "cross_per_approach": {"I1": 450, "I2": 300, "I3": 400, "I4": 300}, "mainline_through_fraction": 0.745, "derived_eb_th_i4": 760},
+    "S2": {"start": "16:30", "end": "18:30", "eb_entry": 1300, "eb_entry_core": {"start": "17:00", "end": "17:45", "flow": 1700}, "wb_entry": 1100, "cross_per_approach": {"I1": 450, "I2": 300, "I3": 400, "I4": 300}, "mainline_through_fraction": 0.81, "derived_eb_th_i4": 1050, "derived_basis": "core"},
+    "S3": {"start": "17:00", "end": "19:30", "eb_entry": 1350, "wb_entry": 1000, "cross_per_approach": {"I1": 450, "I2": 300, "I3": 400, "I4": 300}, "mainline_through_fraction": 0.745, "derived_eb_th_i4": 720,
+           "pulse": {"intersection": "I3", "approach": "NB", "start": "18:05", "end": "18:15", "added_flow": 600, "split": {"R": 0.70, "T": 0.20, "L": 0.10}}}
+  },
+  "turning": {
+    "source": "M1",
+    "_note": "Mainline turning at I1-I3 (EB) and I4-I2 (WB): left = right = (1 - through_fraction)/2 per scenario. EB at I4 and WB at I1 are the last intersections before the exits and use fixed fractions.",
+    "eb_at_I4": {"L": 0.10, "T": 0.80, "R": 0.10},
+    "wb_at_I1": {"L": 0.10, "T": 0.80, "R": 0.10},
+    "cross": {
+      "I1": {"L": 0.15, "T": 0.70, "R": 0.15},
+      "I2": {"L": 0.10, "T": 0.80, "R": 0.10},
+      "I3": {"L": 0.15, "T": 0.70, "R": 0.15},
+      "I4": {"L": 0.00, "T": 0.80, "R": 0.20}
+    }
+  },
+  "pedestrians": {
+    "source": "DZ 4.2 call-rate ranges; per-crosswalk values M1. Milestone 1 models push-button calls only, not pedestrian movement.",
+    "call_rate_per_h": {
+      "S0": {"side_crossing": 20, "mainline_crossing": 30, "I4_mainline_crossing": 60},
+      "S1": {"side_crossing": 40, "mainline_crossing": 60, "I4_mainline_crossing": 250},
+      "S2": {"side_crossing": 40, "mainline_crossing": 60, "I4_mainline_crossing": 250},
+      "S3": {"side_crossing": 40, "mainline_crossing": 60, "I4_mainline_crossing": 250}
+    }
+  }
+}
