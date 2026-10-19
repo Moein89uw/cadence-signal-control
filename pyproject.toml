@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cadence-signal-control"
+version = "0.1.0"
+description = "Cadence: research testbed for uncertainty-aware traffic signal coordination (Corridor R-1)."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Moein Khaloei" }]
+# License not yet chosen; see LICENSES/README.md.
+dependencies = [
+    "eclipse-sumo==1.28.0",
+    "libsumo==1.28.0",
+    "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "slow: long simulation runs (deselect with -m 'not slow')",
+]
