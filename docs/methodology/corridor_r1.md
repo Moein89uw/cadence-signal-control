@@ -28,7 +28,7 @@ Usable storage is enforced exactly with SUMO's edge `length` override, using the
 
 1. **Cross-street legs** are 300 m long in each direction (Document Zero gives lane configurations only).
 2. **East exit link** is one lane, because only the single EB through/right lane at I4 and the NB right turn feed it.
-3. **Lane drop** uses a SUMO zipper node, so the two EB lanes merge alternately into one.
+3. **Lane drop**: both EB lanes connect into the single lane at a priority node, and netconvert gives the inner lane priority, so vehicles in the right lane yield at the merge. A zipper node was tried first; it produced SUMO emergency-braking warnings at the merge (about three per simulated hour), which the priority merge does not.
 4. **Mainline right turns** share the rightmost through lane; there is no right-turn bay.
 5. **Right turn on red** is not modeled.
 6. **Turning fractions**: at I1–I3 eastbound and I4–I2 westbound, left = right = (1 − t)/2, with through fraction t per scenario (S0 0.85, S1 0.745, S2 0.81, S3 0.745). These were calibrated so the derived EB through/right volume at I4 matches Document Zero 4.2 within 1% (430, 755, 1045, 718 veh/h against 430, 760, 1050, 720). Eastbound at I4 and westbound at I1 use L/T/R = 0.10/0.80/0.10. Cross streets use 0.15/0.70/0.15 at I1 and I3, 0.10/0.80/0.10 at I2, and 0/0.80/0.20 at I4 (no lefts).

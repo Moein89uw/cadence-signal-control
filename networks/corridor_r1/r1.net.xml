@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 2026-10-19T15:37:42.593332-08:00 by Eclipse SUMO netconvert 1.28.0
+<!-- generated on 2026-10-19T16:02:00.231004-08:00 by Eclipse SUMO netconvert 1.28.0
 <netconvertConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
 
     <input>
@@ -518,9 +518,9 @@
         <request index="0" response="00" foes="00" cont="0"/>
         <request index="1" response="00" foes="00" cont="0"/>
     </junction>
-    <junction id="D" type="zipper" x="1318.00" y="0.00" incLanes="EB3a_0 EB3a_1" intLanes=":D_0_0 :D_0_1" shape="1322.00,0.00 1322.00,-3.20 1318.97,-4.03 1317.03,-5.57 1315.79,-6.16 1314.00,-6.40 1314.00,0.00">
+    <junction id="D" type="priority" x="1318.00" y="0.00" incLanes="EB3a_0 EB3a_1" intLanes=":D_0_0 :D_0_1" shape="1322.00,0.00 1322.00,-3.20 1318.97,-4.03 1317.03,-5.57 1315.79,-6.16 1314.00,-6.40 1314.00,0.00">
         <request index="0" response="10" foes="10" cont="0"/>
-        <request index="1" response="01" foes="01" cont="0"/>
+        <request index="1" response="00" foes="01" cont="0"/>
     </junction>
     <junction id="E0" type="dead_end" x="2050.00" y="0.00" incLanes="EB4_0" intLanes="" shape="2050.00,0.00 2050.00,-3.20 2050.00,0.00"/>
     <junction id="I1" type="traffic_light" x="600.00" y="0.00" incLanes="N1in_b_0 N1in_b_1 WB1b_0 WB1b_1 WB1b_2 S1in_b_0 S1in_b_1 EB0b_0 EB0b_1 EB0b_2" intLanes=":I1_0_0 :I1_1_0 :I1_14_0 :I1_3_0 :I1_4_0 :I1_4_1 :I1_15_0 :I1_7_0 :I1_8_0 :I1_16_0 :I1_10_0 :I1_11_0 :I1_11_1 :I1_17_0" shape="593.60,13.60 603.20,13.60 604.00,11.38 605.00,10.60 606.40,10.04 608.20,9.71 610.40,9.60 610.40,-6.40 608.18,-7.20 607.40,-8.20 606.84,-9.60 606.51,-11.40 606.40,-13.60 596.80,-13.60 596.00,-11.38 595.00,-10.60 593.60,-10.04 591.80,-9.71 589.60,-9.60 589.60,6.40 591.82,7.20 592.60,8.20 593.16,9.60 593.49,11.40">
@@ -630,8 +630,8 @@
     <connection from="EB2b" to="EB3a" fromLane="0" toLane="0" via=":I3_11_0" tl="I3" linkIndex="11" dir="s" state="O"/>
     <connection from="EB2b" to="EB3a" fromLane="1" toLane="1" via=":I3_11_1" tl="I3" linkIndex="12" dir="s" state="O"/>
     <connection from="EB2b" to="N3out" fromLane="2" toLane="0" via=":I3_13_0" tl="I3" linkIndex="13" dir="l" state="o"/>
-    <connection from="EB3a" to="EB3b" fromLane="0" toLane="0" via=":D_0_0" dir="s" state="Z"/>
-    <connection from="EB3a" to="EB3b" fromLane="1" toLane="0" via=":D_0_1" dir="s" state="Z"/>
+    <connection from="EB3a" to="EB3b" fromLane="0" toLane="0" via=":D_0_0" dir="s" state="m"/>
+    <connection from="EB3a" to="EB3b" fromLane="1" toLane="0" keepClear="0" via=":D_0_1" dir="s" state="M"/>
     <connection from="EB3b" to="EB3c" fromLane="0" toLane="0" via=":B4E_0_0" dir="s" state="M"/>
     <connection from="EB3b" to="EB3c" fromLane="0" toLane="1" via=":B4E_0_1" dir="s" state="M"/>
     <connection from="EB3c" to="S4out" fromLane="0" toLane="0" via=":I4_8_0" tl="I4" linkIndex="8" dir="r" state="O"/>
