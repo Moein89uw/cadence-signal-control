@@ -48,6 +48,14 @@ def main() -> None:
         "departed": rec.departed, "arrived": rec.arrived,
         "collisions": len(rec.collisions), "teleports": rec.teleports,
         "sumo_warnings": {k: len(v) for k, v in rec.warnings.items()},
+        "accounting": {
+            "identity_violations": len(sim.ledger.violations),
+            "system_vehicle_hours": round(sim.ledger.vehicle_seconds / 3600, 2),
+            "network_vehicle_hours": round(sim.ledger.network_vehicle_seconds / 3600, 2),
+            "queued_vehicle_hours": round(sim.ledger.queued_vehicle_seconds / 3600, 2),
+            "max_backlog": max((s.backlog for s in sim.ledger.snapshots), default=0),
+            "final": vars(sim.ledger.last),
+        },
         "intersections": {},
     }
     for i, c in sim.controllers.items():

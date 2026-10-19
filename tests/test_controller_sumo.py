@@ -29,6 +29,7 @@ def _assert_clean(sim, rec):
     assert rec.teleports == 0
     assert rec.warnings["emergency_braking"] == []
     assert rec.warnings["collision"] == [] and rec.warnings["teleport"] == []
+    assert sim.ledger.violations == []
     for i, c in sim.controllers.items():
         assert check_all(rec.state_changes[i], rec.end_tick, sim.signal_maps[i], junction_foes(i), c) == [], i
         assert c.overruns == 0, i
