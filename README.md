@@ -11,7 +11,7 @@ Milestone 1 builds a trustworthy simulation foundation. It contains no optimizer
 | Increment | Content | Status |
 | --- | --- | --- |
 | 1 | Corridor R-1 network and S0–S3 demand | Done |
-| 2 | Dual-ring actuated-coordinated signal control with pedestrian intervals | Planned |
+| 2 | Dual-ring actuated-coordinated signal control with pedestrian intervals | Done |
 | 3 | Loop and camera observations (no faults) | Planned |
 | 4 | Vehicle accounting with teleporting disabled | Planned |
 | 5 | Save, restore and one-action counterfactual replay | Planned |
@@ -35,9 +35,16 @@ Requires Python 3.10 or newer. SUMO is installed from PyPI with the package.
 ```bash
 pip install -e ".[dev]"
 python -m cadence.simulation.network   # rebuild the network from spec.json
-pytest -m "not slow"                    # fast tests
-pytest -m slow                          # long simulation tests
+python -m cadence.controllers.timing    # regenerate timing plans
+pytest -m "not slow"                    # fast tests (about 40 s)
+pytest -m slow                          # full scenario windows (about 5 min)
+python experiments/run_scenario.py --scenario S1   # one run with a safety and timing summary
 ```
+
+## Documentation
+
+- `docs/methodology/corridor_r1.md`: how Document Zero is represented in SUMO, and every Milestone 1 assumption.
+- `docs/methodology/signal_control.md`: the baseline actuated-coordinated controller and how it is checked.
 
 ## Ground rules
 
