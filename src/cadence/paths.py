@@ -17,9 +17,12 @@ def load_spec(path: Path = SPEC_PATH) -> dict:
 
 
 def sumo_home() -> Path:
-    """SUMO installation directory, from SUMO_HOME or the eclipse-sumo wheel."""
+    """SUMO installation directory, from SUMO_HOME or the eclipse-sumo wheel.
+
+    Importing libsumo may point SUMO_HOME at libsumo's data-only directory,
+    which has no executables, so SUMO_HOME is used only if it contains bin/."""
     env = os.environ.get("SUMO_HOME")
-    if env:
+    if env and (Path(env) / "bin").is_dir():
         return Path(env)
     import sumo  # eclipse-sumo wheel
 
