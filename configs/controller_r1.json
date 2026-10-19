@@ -1,6 +1,6 @@
 {
   "_about": "Actuated-coordinated controller settings for Corridor R-1, Milestone 1. Timing constants (yellow, all-red, minimum greens, walk, pedestrian clearance, LPI, cycle lengths) come from networks/corridor_r1/spec.json (DZ 3.4). Every value in this file is an M1 modeling choice and must be reviewed before results are reported.",
-  "version": "ctrl-m1-0.1",
+  "version": "ctrl-m1-0.2",
   "step_length_s": 0.1,
   "phase_assignment": {
     "1": "WB left (protected only)",
@@ -33,8 +33,7 @@
     "offset_method": "eastbound progression at the posted speed, aligned on the programmed start of phase 2"
   },
   "actuation": {
-    "detection": "stop-bar presence zone on every lane that feeds a non-coordinated phase",
-    "presence_zone_m": 12.0,
+    "detection": "the stop-bar detectors defined under detection in spec.json (loops at I1 and I2, radar zones at I3, video zones at I4); each feeds the phase its lane serves",
     "passage_time_s": 2.0,
     "call_memory": "non-locking for vehicles; pedestrian calls latch until a walk is served"
   },
