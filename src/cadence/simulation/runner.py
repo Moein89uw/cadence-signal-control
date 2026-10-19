@@ -24,8 +24,9 @@ from pathlib import Path
 
 import numpy as np
 
+from cadence.accounting.ledger import HALTING_SPEED_MPS, Ledger, route_departs
 from cadence.controllers.actuated import TICKS_PER_S, ActuatedCoordinatedController, build_controllers, signal_state
-from cadence.controllers.phasing import all_signal_maps, load_controller_config
+from cadence.controllers.phasing import all_signal_maps, load_controller_config, signal_links
 from cadence.controllers.timing import load_plans
 from cadence.detectors.layout import actuation_map, build_layout, write_additional
 from cadence.detectors.logs import hires_log, radar_array, tmc_counts, write_log_csv
@@ -87,7 +88,8 @@ class CorridorSimulation:
     def __init__(self, scenario: str, replication: int, workdir: Path, begin_s: float | None = None,
                  end_s: float | None = None, spec: dict | None = None, ctrl_cfg: dict | None = None,
                  plans: dict | None = None, net_path: Path = R1_DIR / "r1.net.xml",
-                 extra_sumo_args: tuple[str, ...] = (), presence_audit_every: int = 0):
+                 extra_sumo_args: tuple[str, ...] = (), presence_audit_every: int = 0,
+                 queue_audit_every: int = 0, signal_override=None):
         self.spec = spec or load_spec()
         self.ctrl_cfg = ctrl_cfg or load_controller_config()
         self.plans = plans or load_plans(spec=self.spec, ctrl=self.ctrl_cfg)
@@ -106,6 +108,10 @@ class CorridorSimulation:
         self.controllers: dict[str, ActuatedCoordinatedController] = {}
         self.presence_audit_every = presence_audit_every
         self.presence_audit = {"samples": 0, "mismatches": [], "ambiguous": 0, "vehicles_seen": defaultdict(set)}
+        self.queue_audit_every = queue_audit_every
+        self.queue_audit = {"samples": 0, "mismatches": []}
+        # test hook: f(intersection, tick, state, sim) -> state, applied before SUMO sees it
+        self.signal_override = signal_override
         self._started = False
 
     # ------------------------------------------------------------------ setup
@@ -144,6 +150,11 @@ class CorridorSimulation:
         self.signal_maps = all_signal_maps(self.spec, self.ctrl_cfg, self.net_path)
         self.actuation = actuation_map(self.detectors)
         self.recorder = ObservationRecorder(self.detectors, self.radars, self.spec, self.tick)
+        self.ledger = Ledger(route_departs(files["routes"]))
+        self.signal_link_index = {i: defaultdict(set) for i in INTERSECTIONS}
+        for i in INTERSECTIONS:
+            for l in signal_links(i, self.net_path, self.spec):
+                self.signal_link_index[i][l.approach].add(l.index)
         self._last_state = {i: None for i in INTERSECTIONS}
         self._prev, self._lane_len = lane_predecessors(self.net_path) if self.presence_audit_every else ({}, {})
         calls = dm.read_ped_calls(files["ped_calls"])
@@ -166,6 +177,8 @@ class CorridorSimulation:
         for i, c in self.controllers.items():
             c.step(t, phase_presence(state, self.actuation[i]), presses.get(i, ()))
             sig = signal_state(c, self.signal_maps[i])
+            if self.signal_override is not None:
+                sig = self.signal_override(i, t, sig, self)
             if sig != self._last_state[i]:
                 libsumo.trafficlight.setRedYellowGreenState(i, sig)
                 self._last_state[i] = sig
@@ -180,6 +193,20 @@ class CorridorSimulation:
         rec.arrived += libsumo.simulation.getArrivedNumber()
         rec.departed += libsumo.simulation.getDepartedNumber()
         rec.end_tick = self.tick
+        snap = self.ledger.observe(self.tick)
+        if self.queue_audit_every and self.tick % self.queue_audit_every == 0:
+            self._audit_queue(snap)
+
+    def _audit_queue(self, snap) -> None:
+        """Ledger queue count against SUMO's own per-lane halting counts."""
+        import libsumo
+
+        if snap.queued < 0:
+            return
+        halting = sum(libsumo.lane.getLastStepHaltingNumber(l) for l in libsumo.lane.getIDList())
+        self.queue_audit["samples"] += 1
+        if halting != snap.queued:
+            self.queue_audit["mismatches"].append((snap.tick, snap.queued, halting))
 
     def _audit(self, t: int, state: dict[str, bool]) -> None:
         """Independent check of detector states from vehicle positions."""
@@ -254,6 +281,15 @@ class CorridorSimulation:
                             round(d.end_m, 2), round(d.distance_m, 2), d.phase if d.phase is not None else ""])
         return out
 
+    def write_ledger(self) -> Path:
+        path = self.workdir / "ledger.csv"
+        with open(path, "w", newline="", encoding="utf-8") as fh:
+            w = csv.writer(fh)
+            w.writerow(["time_s", "scheduled", "backlog", "inserted", "in_network", "queued", "exited"])
+            for s in self.ledger.snapshots:
+                w.writerow([round(s.tick / 10, 1), s.scheduled, s.backlog, s.inserted, s.in_network, s.queued, s.exited])
+        return path
+
     def close(self) -> None:
         if self._started:
             import libsumo
@@ -262,6 +298,7 @@ class CorridorSimulation:
             self._started = False
             self.record.warnings = parse_sumo_warnings(self.workdir / "sumo_warnings.log")
             self.write_observations()
+            self.write_ledger()
 
     def __enter__(self) -> "CorridorSimulation":
         self.start()
