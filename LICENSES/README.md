@@ -13,6 +13,7 @@ Cadence calls these as separate, unmodified installed packages. None of their so
 | Eclipse SUMO 1.28.0 (`eclipse-sumo`, `libsumo`) | Microsimulation ground truth, network building | EPL-2.0, with GPL-2.0-or-later as a secondary license |
 | NumPy | Random-number generation, arrays | BSD-3-Clause |
 | pytest (development only) | Tests | MIT |
+| Matplotlib (reports only, optional) | Figures in docs/validation | Matplotlib License (PSF-based, BSD-compatible) |
 
 ## Excluded on purpose
 
