@@ -1,0 +1,449 @@
+{
+  "machine": {
+    "cpu": "x86_64",
+    "cores_used": 1,
+    "python": "3.13.16"
+  },
+  "cases": [
+    {
+      "scenario": "S1",
+      "stress": false,
+      "time": "07:30",
+      "checkpoint": "/home/claude/cadence-signal-control/runs/clearance/S1/cp_0730.xml",
+      "horizon_vehicle_seconds": 72535.40000000049,
+      "in_system_at_checkpoint": 238,
+      "backlog_at_checkpoint": 0,
+      "clearance": {
+        "cleared": true,
+        "duration_s": 311.2,
+        "vehicle_seconds": 21598.399999970687,
+        "censored_vehicles": 0
+      },
+      "by_cap": {
+        "30": {
+          "clearance_vehicle_seconds": 21598.399999970687,
+          "censored": 0
+        },
+        "60": {
+          "clearance_vehicle_seconds": 21598.399999970687,
+          "censored": 0
+        },
+        "90": {
+          "clearance_vehicle_seconds": 21598.399999970687,
+          "censored": 0
+        }
+      },
+      "wall_resume_s": 0.59,
+      "wall_run_s": 1.62,
+      "collisions": 0,
+      "ledger_violations": 0,
+      "J_vehicle_hours": {
+        "cap30_pen30": 26.148,
+        "cap30_pen60": 26.148,
+        "cap30_pen120": 26.148,
+        "cap60_pen30": 26.148,
+        "cap60_pen60": 26.148,
+        "cap60_pen120": 26.148,
+        "cap90_pen30": 26.148,
+        "cap90_pen60": 26.148,
+        "cap90_pen120": 26.148
+      }
+    },
+    {
+      "scenario": "S1",
+      "stress": false,
+      "time": "08:00",
+      "checkpoint": "/home/claude/cadence-signal-control/runs/clearance/S1/cp_0800.xml",
+      "horizon_vehicle_seconds": 70915.40000000224,
+      "in_system_at_checkpoint": 203,
+      "backlog_at_checkpoint": 0,
+      "clearance": {
+        "cleared": true,
+        "duration_s": 299.3,
+        "vehicle_seconds": 19101.29999998305,
+        "censored_vehicles": 0
+      },
+      "by_cap": {
+        "30": {
+          "clearance_vehicle_seconds": 19101.29999998305,
+          "censored": 0
+        },
+        "60": {
+          "clearance_vehicle_seconds": 19101.29999998305,
+          "censored": 0
+        },
+        "90": {
+          "clearance_vehicle_seconds": 19101.29999998305,
+          "censored": 0
+        }
+      },
+      "wall_resume_s": 0.57,
+      "wall_run_s": 1.38,
+      "collisions": 0,
+      "ledger_violations": 0,
+      "J_vehicle_hours": {
+        "cap30_pen30": 25.005,
+        "cap30_pen60": 25.005,
+        "cap30_pen120": 25.005,
+        "cap60_pen30": 25.005,
+        "cap60_pen60": 25.005,
+        "cap60_pen120": 25.005,
+        "cap90_pen30": 25.005,
+        "cap90_pen60": 25.005,
+        "cap90_pen120": 25.005
+      }
+    },
+    {
+      "scenario": "S1",
+      "stress": false,
+      "time": "08:45",
+      "checkpoint": "/home/claude/cadence-signal-control/runs/clearance/S1/cp_0845.xml",
+      "horizon_vehicle_seconds": 79525.70000000414,
+      "in_system_at_checkpoint": 260,
+      "backlog_at_checkpoint": 4,
+      "clearance": {
+        "cleared": true,
+        "duration_s": 443.6,
+        "vehicle_seconds": 26481.000000067987,
+        "censored_vehicles": 0
+      },
+      "by_cap": {
+        "30": {
+          "clearance_vehicle_seconds": 26481.000000067987,
+          "censored": 0
+        },
+        "60": {
+          "clearance_vehicle_seconds": 26481.000000067987,
+          "censored": 0
+        },
+        "90": {
+          "clearance_vehicle_seconds": 26481.000000067987,
+          "censored": 0
+        }
+      },
+      "wall_resume_s": 0.56,
+      "wall_run_s": 1.94,
+      "collisions": 0,
+      "ledger_violations": 0,
+      "J_vehicle_hours": {
+        "cap30_pen30": 29.446,
+        "cap30_pen60": 29.446,
+        "cap30_pen120": 29.446,
+        "cap60_pen30": 29.446,
+        "cap60_pen60": 29.446,
+        "cap60_pen120": 29.446,
+        "cap90_pen30": 29.446,
+        "cap90_pen60": 29.446,
+        "cap90_pen120": 29.446
+      }
+    },
+    {
+      "scenario": "S2",
+      "stress": false,
+      "time": "17:15",
+      "checkpoint": "/home/claude/cadence-signal-control/runs/clearance/S2/cp_1715.xml",
+      "horizon_vehicle_seconds": 99044.70000000566,
+      "in_system_at_checkpoint": 333,
+      "backlog_at_checkpoint": 17,
+      "clearance": {
+        "cleared": true,
+        "duration_s": 441.7,
+        "vehicle_seconds": 42851.20000001765,
+        "censored_vehicles": 0
+      },
+      "by_cap": {
+        "30": {
+          "clearance_vehicle_seconds": 42851.20000001765,
+          "censored": 0
+        },
+        "60": {
+          "clearance_vehicle_seconds": 42851.20000001765,
+          "censored": 0
+        },
+        "90": {
+          "clearance_vehicle_seconds": 42851.20000001765,
+          "censored": 0
+        }
+      },
+      "wall_resume_s": 0.47,
+      "wall_run_s": 2.29,
+      "collisions": 0,
+      "ledger_violations": 0,
+      "J_vehicle_hours": {
+        "cap30_pen30": 39.416,
+        "cap30_pen60": 39.416,
+        "cap30_pen120": 39.416,
+        "cap60_pen30": 39.416,
+        "cap60_pen60": 39.416,
+        "cap60_pen120": 39.416,
+        "cap90_pen30": 39.416,
+        "cap90_pen60": 39.416,
+        "cap90_pen120": 39.416
+      }
+    },
+    {
+      "scenario": "S2",
+      "stress": false,
+      "time": "17:45",
+      "checkpoint": "/home/claude/cadence-signal-control/runs/clearance/S2/cp_1745.xml",
+      "horizon_vehicle_seconds": 96681.10000000731,
+      "in_system_at_checkpoint": 335,
+      "backlog_at_checkpoint": 32,
+      "clearance": {
+        "cleared": true,
+        "duration_s": 656.9,
+        "vehicle_seconds": 48424.89999996126,
+        "censored_vehicles": 0
+      },
+      "by_cap": {
+        "30": {
+          "clearance_vehicle_seconds": 48424.89999996126,
+          "censored": 0
+        },
+        "60": {
+          "clearance_vehicle_seconds": 48424.89999996126,
+          "censored": 0
+        },
+        "90": {
+          "clearance_vehicle_seconds": 48424.89999996126,
+          "censored": 0
+        }
+      },
+      "wall_resume_s": 0.56,
+      "wall_run_s": 2.9,
+      "collisions": 0,
+      "ledger_violations": 0,
+      "J_vehicle_hours": {
+        "cap30_pen30": 40.307,
+        "cap30_pen60": 40.307,
+        "cap30_pen120": 40.307,
+        "cap60_pen30": 40.307,
+        "cap60_pen60": 40.307,
+        "cap60_pen120": 40.307,
+        "cap90_pen30": 40.307,
+        "cap90_pen60": 40.307,
+        "cap90_pen120": 40.307
+      }
+    },
+    {
+      "scenario": "S2",
+      "stress": false,
+      "time": "18:15",
+      "checkpoint": "/home/claude/cadence-signal-control/runs/clearance/S2/cp_1815.xml",
+      "horizon_vehicle_seconds": 94871.09999999311,
+      "in_system_at_checkpoint": 319,
+      "backlog_at_checkpoint": 33,
+      "clearance": {
+        "cleared": true,
+        "duration_s": 793.7,
+        "vehicle_seconds": 57770.40000015055,
+        "censored_vehicles": 0
+      },
+      "by_cap": {
+        "30": {
+          "clearance_vehicle_seconds": 57770.40000015055,
+          "censored": 0
+        },
+        "60": {
+          "clearance_vehicle_seconds": 57770.40000015055,
+          "censored": 0
+        },
+        "90": {
+          "clearance_vehicle_seconds": 57770.40000015055,
+          "censored": 0
+        }
+      },
+      "wall_resume_s": 0.49,
+      "wall_run_s": 3.17,
+      "collisions": 0,
+      "ledger_violations": 0,
+      "J_vehicle_hours": {
+        "cap30_pen30": 42.4,
+        "cap30_pen60": 42.4,
+        "cap30_pen120": 42.4,
+        "cap60_pen30": 42.4,
+        "cap60_pen60": 42.4,
+        "cap60_pen120": 42.4,
+        "cap90_pen30": 42.4,
+        "cap90_pen60": 42.4,
+        "cap90_pen120": 42.4
+      }
+    },
+    {
+      "scenario": "S3",
+      "stress": false,
+      "time": "18:10",
+      "checkpoint": "/home/claude/cadence-signal-control/runs/clearance/S3/cp_1810.xml",
+      "horizon_vehicle_seconds": 73358.50000000314,
+      "in_system_at_checkpoint": 272,
+      "backlog_at_checkpoint": 5,
+      "clearance": {
+        "cleared": true,
+        "duration_s": 484.7,
+        "vehicle_seconds": 26675.999999939348,
+        "censored_vehicles": 0
+      },
+      "by_cap": {
+        "30": {
+          "clearance_vehicle_seconds": 26675.999999939348,
+          "censored": 0
+        },
+        "60": {
+          "clearance_vehicle_seconds": 26675.999999939348,
+          "censored": 0
+        },
+        "90": {
+          "clearance_vehicle_seconds": 26675.999999939348,
+          "censored": 0
+        }
+      },
+      "wall_resume_s": 0.56,
+      "wall_run_s": 2.04,
+      "collisions": 0,
+      "ledger_violations": 0,
+      "J_vehicle_hours": {
+        "cap30_pen30": 27.787,
+        "cap30_pen60": 27.787,
+        "cap30_pen120": 27.787,
+        "cap60_pen30": 27.787,
+        "cap60_pen60": 27.787,
+        "cap60_pen120": 27.787,
+        "cap90_pen30": 27.787,
+        "cap90_pen60": 27.787,
+        "cap90_pen120": 27.787
+      }
+    },
+    {
+      "scenario": "S3",
+      "stress": false,
+      "time": "18:30",
+      "checkpoint": "/home/claude/cadence-signal-control/runs/clearance/S3/cp_1830.xml",
+      "horizon_vehicle_seconds": 79435.90000000293,
+      "in_system_at_checkpoint": 275,
+      "backlog_at_checkpoint": 0,
+      "clearance": {
+        "cleared": true,
+        "duration_s": 332.4,
+        "vehicle_seconds": 24321.30000009481,
+        "censored_vehicles": 0
+      },
+      "by_cap": {
+        "30": {
+          "clearance_vehicle_seconds": 24321.30000009481,
+          "censored": 0
+        },
+        "60": {
+          "clearance_vehicle_seconds": 24321.30000009481,
+          "censored": 0
+        },
+        "90": {
+          "clearance_vehicle_seconds": 24321.30000009481,
+          "censored": 0
+        }
+      },
+      "wall_resume_s": 0.58,
+      "wall_run_s": 1.66,
+      "collisions": 0,
+      "ledger_violations": 0,
+      "J_vehicle_hours": {
+        "cap30_pen30": 28.821,
+        "cap30_pen60": 28.821,
+        "cap30_pen120": 28.821,
+        "cap60_pen30": 28.821,
+        "cap60_pen60": 28.821,
+        "cap60_pen120": 28.821,
+        "cap90_pen30": 28.821,
+        "cap90_pen60": 28.821,
+        "cap90_pen120": 28.821
+      }
+    },
+    {
+      "scenario": "S3",
+      "stress": false,
+      "time": "19:15",
+      "checkpoint": "/home/claude/cadence-signal-control/runs/clearance/S3/cp_1915.xml",
+      "horizon_vehicle_seconds": 67616.5000000014,
+      "in_system_at_checkpoint": 227,
+      "backlog_at_checkpoint": 0,
+      "clearance": {
+        "cleared": true,
+        "duration_s": 418.4,
+        "vehicle_seconds": 22792.60000003781,
+        "censored_vehicles": 0
+      },
+      "by_cap": {
+        "30": {
+          "clearance_vehicle_seconds": 22792.60000003781,
+          "censored": 0
+        },
+        "60": {
+          "clearance_vehicle_seconds": 22792.60000003781,
+          "censored": 0
+        },
+        "90": {
+          "clearance_vehicle_seconds": 22792.60000003781,
+          "censored": 0
+        }
+      },
+      "wall_resume_s": 0.51,
+      "wall_run_s": 1.77,
+      "collisions": 0,
+      "ledger_violations": 0,
+      "J_vehicle_hours": {
+        "cap30_pen30": 25.114,
+        "cap30_pen60": 25.114,
+        "cap30_pen120": 25.114,
+        "cap60_pen30": 25.114,
+        "cap60_pen60": 25.114,
+        "cap60_pen120": 25.114,
+        "cap90_pen30": 25.114,
+        "cap90_pen60": 25.114,
+        "cap90_pen120": 25.114
+      }
+    },
+    {
+      "scenario": "S1",
+      "stress": true,
+      "time": "07:30",
+      "checkpoint": "/home/claude/cadence-signal-control/runs/clearance/S1_stress/cp_0730.xml",
+      "horizon_vehicle_seconds": 180874.50000001385,
+      "in_system_at_checkpoint": 658,
+      "backlog_at_checkpoint": 323,
+      "clearance": {
+        "cleared": true,
+        "duration_s": 829.8,
+        "vehicle_seconds": 239796.70000001928,
+        "censored_vehicles": 0
+      },
+      "by_cap": {
+        "30": {
+          "clearance_vehicle_seconds": 239796.70000001928,
+          "censored": 0
+        },
+        "60": {
+          "clearance_vehicle_seconds": 239796.70000001928,
+          "censored": 0
+        },
+        "90": {
+          "clearance_vehicle_seconds": 239796.70000001928,
+          "censored": 0
+        }
+      },
+      "wall_resume_s": 0.59,
+      "wall_run_s": 8.86,
+      "collisions": 0,
+      "ledger_violations": 0,
+      "J_vehicle_hours": {
+        "cap30_pen30": 116.853,
+        "cap30_pen60": 116.853,
+        "cap30_pen120": 116.853,
+        "cap60_pen30": 116.853,
+        "cap60_pen60": 116.853,
+        "cap60_pen120": 116.853,
+        "cap90_pen30": 116.853,
+        "cap90_pen60": 116.853,
+        "cap90_pen120": 116.853
+      }
+    }
+  ]
+}
