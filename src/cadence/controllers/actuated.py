@@ -75,6 +75,15 @@ EV_COORD_YIELD_POINT = 151
 EV_FORCE_OFF_OVERRUN = 200      # green held past force-off to finish minimum green or pedestrian clearance
 EV_BARRIER_CROSS = 201          # parameter 1 = into main group, 2 = into side group
 EV_PHASE_BEGIN_LPI = 202        # leading pedestrian interval begins (vehicle display still red)
+EV_HELD_PAST_FORCE_OFF = 203    # green held past force-off by an external hold command
+EV_CMD_CALL = 210               # external commands (parameter = phase)
+EV_CMD_HOLD = 211
+EV_CMD_FORCE_OFF = 212
+EV_CMD_OMIT = 213
+
+# Writable commands by controller family (Document Zero 3.5)
+FAMILY_COMMANDS = {"A": frozenset({"call", "hold", "force_off", "omit"}),
+                   "B": frozenset({"call", "hold", "force_off"})}
 
 
 def s2t(seconds: float) -> int:
@@ -130,8 +139,15 @@ class PedState:
 class ActuatedCoordinatedController:
     def __init__(self, intersection: str, phases: Mapping[int, PhaseDef], plan: TimingPlan,
                  start_tick: int, passage_s: float = 2.0, simultaneous_gap_out: bool = True,
-                 ped_recycle: bool = True):
+                 ped_recycle: bool = True, family: str = "A"):
         self.intersection = intersection
+        self.family = family
+        self.allowed_commands = FAMILY_COMMANDS[family]
+        # external commands: phase -> last tick (inclusive) the command applies
+        self.cmd_call: dict[int, int] = {}
+        self.cmd_hold: dict[int, int] = {}
+        self.cmd_omit: dict[int, int] = {}
+        self.cmd_force_off: set[int] = set()
         self.ph = {p: PhaseTiming.from_def(d, passage_s) for p, d in phases.items()}
         self.seq = {g: {r: list(s) for r, s in plan.sequences[g].items()} for g in (MAIN, SIDE)}
         self.cycle = s2t(plan.cycle_s)
@@ -153,6 +169,39 @@ class ActuatedCoordinatedController:
         self._last_yield_logged: int | None = None
         self.events: list[tuple[int, int, int]] = []
         self.overruns = 0
+
+    # ------------------------------------------------------------------ commands
+    def command(self, kind: str, phase: int, duration_ticks: int = 1) -> None:
+        """Apply an external command at the current tick (it takes effect at
+        the next step). call: place a call; hold: keep the phase green while
+        it is green; force_off: end the phase as soon as minimum green and any
+        pedestrian interval allow (non-coordinated phases); omit: do not start
+        the phase. Commands never shorten minimum green, clearance or
+        pedestrian intervals."""
+        if kind not in self.allowed_commands:
+            raise ValueError(f"{self.intersection} (family {self.family}) does not accept '{kind}'")
+        if phase not in self.ph:
+            raise ValueError(f"{self.intersection} has no phase {phase}")
+        until = self.t + max(1, duration_ticks)
+        if kind == "call":
+            self.cmd_call[phase] = until
+            self._log(EV_CMD_CALL, phase)
+        elif kind == "hold":
+            self.cmd_hold[phase] = until
+            self._log(EV_CMD_HOLD, phase)
+        elif kind == "force_off":
+            if self.ph[phase].coordinated:
+                raise ValueError("force-off of a coordinated phase is not supported in Milestone 1")
+            self.cmd_force_off.add(phase)
+            self._log(EV_CMD_FORCE_OFF, phase)
+        elif kind == "omit":
+            if self.ph[phase].coordinated:
+                raise ValueError("coordinated phases cannot be omitted")
+            self.cmd_omit[phase] = until
+            self._log(EV_CMD_OMIT, phase)
+
+    def _active(self, table: dict[int, int], p: int, t: int | None = None) -> bool:
+        return table.get(p, -1) >= (self.t if t is None else t)
 
     # ------------------------------------------------------------------ plan
     def _programmed_points(self, plan: TimingPlan) -> tuple[dict[int, int], int]:
@@ -201,12 +250,19 @@ class ActuatedCoordinatedController:
         return self.peds[name].state
 
     # ------------------------------------------------------------------ state
+    _STATIC = ("ph", "seq", "plan", "_fo_tau", "ped_of", "events")
+
     def snapshot(self) -> dict:
-        """Complete controller state, for save and restore."""
-        return copy.deepcopy({k: v for k, v in self.__dict__.items()})
+        """Complete controller state, for save and restore. The event log is
+        recorded by length: restoring truncates it."""
+        snap = copy.deepcopy({k: v for k, v in self.__dict__.items() if k not in self._STATIC})
+        snap["n_events"] = len(self.events)
+        return snap
 
     def restore(self, snap: dict) -> None:
-        self.__dict__.update(copy.deepcopy(snap))
+        snap = copy.deepcopy(snap)
+        del self.events[snap.pop("n_events"):]
+        self.__dict__.update(snap)
 
     # ------------------------------------------------------------------ main step
     def step(self, t: int, presence: Mapping[int, bool], ped_presses: Iterable[str] = ()) -> None:
@@ -248,7 +304,7 @@ class ActuatedCoordinatedController:
     # ------------------------------------------------------------------ helpers
     def _call(self, p: int) -> bool:
         name = self.ped_of.get(p)
-        return self.presence[p] or (name is not None and self.peds[name].pending)
+        return self.presence[p] or self._active(self.cmd_call, p) or (name is not None and self.peds[name].pending)
 
     def _ped_need(self, p: int) -> int:
         d = self.ph[p]
@@ -261,10 +317,12 @@ class ActuatedCoordinatedController:
         ped_pending = name is not None and self.peds[name].pending
         if d.coordinated:
             return True, ped_pending and t_start + d.walk + d.ped_clear <= self.yield_point(k)
+        if self._active(self.cmd_omit, p, t_start):
+            return False, False
         fo = self.force_off(p, k)
         if ped_pending and t_start + self._ped_need(p) <= fo:
             return True, True
-        if self.presence[p] and t_start + d.min_green <= fo:
+        if (self.presence[p] or self._active(self.cmd_call, p)) and t_start + d.min_green <= fo:
             return True, False
         return False, False
 
@@ -389,7 +447,8 @@ class ActuatedCoordinatedController:
                 self._log(EV_COORD_YIELD_POINT, self.k % 256)
             for ring in coord:
                 self._maybe_recycle_walk(ring, yp)
-            if t >= yp and all(self._green_done(r) for r in coord) and self._go_around_demand():
+            held = any(self._active(self.cmd_hold, r.phase) for r in coord)
+            if t >= yp and not held and all(self._green_done(r) for r in coord) and self._go_around_demand():
                 for ring in coord:
                     self._terminate(ring, None)
                 changed = True
@@ -404,13 +463,22 @@ class ActuatedCoordinatedController:
             p = ring.phase
             fo = self.force_off(p)
             self._maybe_recycle_walk(ring, fo)
+            if self._active(self.cmd_hold, p):
+                if t >= fo and not ring.overrun_logged:
+                    ring.overrun_logged = True
+                    self._log(EV_HELD_PAST_FORCE_OFF, p)
+                continue
             if not self._green_done(ring):
                 if t >= fo and not ring.overrun_logged:
                     ring.overrun_logged = True
                     self.overruns += 1
                     self._log(EV_FORCE_OFF_OVERRUN, p)
                 continue
-            if t >= fo:
+            if p in self.cmd_force_off:
+                self.cmd_force_off.discard(p)
+                self._terminate(ring, EV_PHASE_FORCE_OFF)
+                changed = True
+            elif t >= fo:
                 self._terminate(ring, EV_PHASE_FORCE_OFF)
                 changed = True
             elif self.gap[p] == 0:
@@ -439,7 +507,7 @@ class ActuatedCoordinatedController:
 
     def _go_around_demand(self) -> bool:
         """True if leaving coordinated green now lets another phase be served."""
-        t_start = self.t + max(self.ph[r.phase].clearance for r in self.rings.values())
+        t_start = self.t + max(self.ph[r.phase].clearance for r in self.rings.values() if r.phase is not None)
         for seq in self.seq[SIDE].values():
             for p in seq:
                 if self._can_start(p, t_start, self.k)[0]:
@@ -496,5 +564,6 @@ def build_controllers(scenario: str, start_tick: int, spec: dict | None = None, 
         out[i] = ActuatedCoordinatedController(
             i, phase_defs(i, spec, ctrl_cfg), plans[scenario][i], start_tick,
             passage_s=ctrl_cfg["actuation"]["passage_time_s"],
-            simultaneous_gap_out=opts["simultaneous_gap_out"], ped_recycle=opts["pedestrian_recycle"])
+            simultaneous_gap_out=opts["simultaneous_gap_out"], ped_recycle=opts["pedestrian_recycle"],
+            family=spec["intersections"][i]["family"])
     return out

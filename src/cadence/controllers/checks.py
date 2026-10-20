@@ -15,6 +15,7 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass
 
+from cadence.controllers import actuated as A
 from cadence.controllers.actuated import (
     EV_COORD_YIELD_POINT, EV_FORCE_OFF_OVERRUN, EV_PED_BEGIN_CLEAR, EV_PED_BEGIN_DONT_WALK,
     EV_PED_BEGIN_WALK, EV_PED_CALL_REGISTERED, EV_PHASE_BEGIN_GREEN, EV_PHASE_BEGIN_LPI,
@@ -184,8 +185,15 @@ def check_coordination(events, ctrl) -> list[str]:
     happen exactly at the programmed point; no force-off overruns."""
     out = []
     C = ctrl.cycle
+    commanded: set[int] = set()   # phases with an external force-off pending
     for t, c, p in events:
         tau = (t - ctrl.offset) % C
+        if c == A.EV_CMD_FORCE_OFF:
+            commanded.add(p)
+            continue
+        if c == EV_PHASE_FORCE_OFF and p in commanded:
+            commanded.discard(p)
+            continue
         if c == EV_PHASE_BEGIN_YELLOW and ctrl.ph[p].coordinated and not (ctrl._yield_tau <= tau < C):
             out.append(f"{ctrl.intersection}: coordinated phase {p} yellow at cycle time {tau / 10:.1f} s, "
                        f"before yield point {ctrl._yield_tau / 10:.1f} s")

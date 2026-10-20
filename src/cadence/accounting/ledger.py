@@ -57,11 +57,13 @@ class Ledger:
     queued_vehicle_seconds: float = 0.0
     violations: list[str] = field(default_factory=list)
     keep_every: int = 10       # keep one snapshot, and measure the queue, once per second
+    demand_end_s: float = math.inf   # vehicles scheduled at or after this time are not demand
     _next_sched: int = 0
 
     def scheduled_by(self, t_s: float) -> int:
         # vehicles with depart <= t (small tolerance for float times written at 0.01 s)
-        while self._next_sched < len(self.route_departs) and self.route_departs[self._next_sched] <= t_s + 1e-6:
+        while self._next_sched < len(self.route_departs) and self.route_departs[self._next_sched] <= t_s + 1e-6 \
+                and self.route_departs[self._next_sched] < self.demand_end_s - 1e-9:
             self._next_sched += 1
         return self._next_sched
 
@@ -91,6 +93,23 @@ class Ledger:
             self.snapshots.append(snap)
         self.last = snap
         return snap
+
+    def snapshot(self) -> dict:
+        return {"inserted": self.inserted, "exited": self.exited, "vehicle_seconds": self.vehicle_seconds,
+                "network_vehicle_seconds": self.network_vehicle_seconds,
+                "queued_vehicle_seconds": self.queued_vehicle_seconds, "next_sched": self._next_sched,
+                "n_snapshots": len(self.snapshots), "n_violations": len(self.violations),
+                "last": getattr(self, "last", None)}
+
+    def restore(self, snap: dict) -> None:
+        self.inserted, self.exited = snap["inserted"], snap["exited"]
+        self.vehicle_seconds = snap["vehicle_seconds"]
+        self.network_vehicle_seconds = snap["network_vehicle_seconds"]
+        self.queued_vehicle_seconds = snap["queued_vehicle_seconds"]
+        self._next_sched = snap["next_sched"]
+        del self.snapshots[snap["n_snapshots"]:]
+        del self.violations[snap["n_violations"]:]
+        self.last = snap["last"]
 
     def _check(self, s: Snapshot) -> None:
         if s.scheduled != s.backlog + s.inserted:
