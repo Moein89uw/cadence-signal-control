@@ -14,7 +14,7 @@ Milestone 1 builds a trustworthy simulation foundation. It contains no optimizer
 | 2 | Dual-ring actuated-coordinated signal control with pedestrian intervals | Done |
 | 3 | Loop, radar and camera observations (no faults) | Done |
 | 4 | Vehicle accounting with teleporting disabled | Done |
-| 5 | Save, restore and one-action counterfactual replay | Planned |
+| 5 | Save, resume and one-action counterfactual replay | Done |
 | 6 | Prediction-model validation against SUMO | Planned |
 
 ## Layout
@@ -47,6 +47,7 @@ python experiments/run_scenario.py --scenario S1   # one run with a safety and t
 - `docs/methodology/signal_control.md`: the baseline actuated-coordinated controller and how it is checked.
 - `docs/methodology/observations.md`: simulated detection (Document Zero 3.6) and the cabinet logs.
 - `docs/methodology/accounting.md`: vehicle accounting and vehicle-time.
+- `docs/methodology/replay.md`: checkpoints, resumed branches, clearance runs and what is exact.
 
 ## Ground rules
 

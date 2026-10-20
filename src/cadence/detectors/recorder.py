@@ -109,6 +109,31 @@ class ObservationRecorder:
         self._sample_tmc(tick)
         return self.state
 
+    def snapshot(self) -> dict:
+        o = self.obs
+        return {
+            "state": dict(self.state), "track_of": dict(self._track_of), "next_track": self._next_track,
+            "truth": dict(self.truth_track_vehicle),
+            "seen_on_dep": {e: set(v) for e, v in self._seen_on_dep.items()},
+            "lens": {"det": {i: len(v) for i, v in o.detector_events.items()},
+                     "ped": {i: len(v) for i, v in o.ped_presses.items()},
+                     "radar": len(o.radar), "tmc": len(o.tmc)},
+        }
+
+    def restore(self, snap: dict) -> None:
+        self.state = dict(snap["state"])
+        self._track_of = dict(snap["track_of"])
+        self._next_track = snap["next_track"]
+        self.truth_track_vehicle = dict(snap["truth"])
+        self._seen_on_dep = {e: set(v) for e, v in snap["seen_on_dep"].items()}
+        o, lens = self.obs, snap["lens"]
+        for i in list(o.detector_events):
+            del o.detector_events[i][lens["det"].get(i, 0):]
+        for i in list(o.ped_presses):
+            del o.ped_presses[i][lens["ped"].get(i, 0):]
+        o.radar.truncate(lens["radar"])
+        del o.tmc[lens["tmc"]:]
+
     def ped_press(self, tick: int, intersection: str, ped_phase: str) -> None:
         self.obs.ped_presses[intersection].append((tick, int(ped_phase[1:])))
 

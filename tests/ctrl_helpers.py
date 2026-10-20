@@ -20,7 +20,9 @@ def plans():
 
 
 def make(intersection: str, scenario: str = "S1", start: int = 0) -> ActuatedCoordinatedController:
-    return ActuatedCoordinatedController(intersection, phase_defs(intersection), plans()[scenario][intersection], start)
+    family = load_spec()["intersections"][intersection]["family"]
+    return ActuatedCoordinatedController(intersection, phase_defs(intersection), plans()[scenario][intersection], start,
+                                         family=family)
 
 
 def link_map(intersection: str):
