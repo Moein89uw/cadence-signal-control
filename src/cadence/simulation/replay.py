@@ -104,6 +104,9 @@ def run_branch(checkpoint: Path, workdir: Path, until_s: float | None = None, ac
     either to `until_s` or, with `clearance_cap_s`, as a clearance run with no
     new demand until everything has left or the cap is reached. Returns
     outputs_after(...) plus clearance results."""
+    import time
+
+    wall0 = time.perf_counter()
     cp = load_checkpoint(checkpoint)
     t_c = cp.tick / TICKS_PER_S
     if clearance_cap_s is not None:
@@ -114,6 +117,7 @@ def run_branch(checkpoint: Path, workdir: Path, until_s: float | None = None, ac
     else:
         sim = CorridorSimulation.resume(cp, workdir)
         end_tick = int(round((sim.end_s if until_s is None else until_s) * TICKS_PER_S))
+    wall_ready = time.perf_counter()
     pending = sorted(actions, key=lambda a: a.at_s)
     cleared_at = None
     vs0 = sim.ledger.vehicle_seconds
@@ -140,4 +144,6 @@ def run_branch(checkpoint: Path, workdir: Path, until_s: float | None = None, ac
             "censored_vehicles": last.in_network + last.backlog,
         }
     out["warnings"] = {k: len(v) for k, v in sim.record.warnings.items()}
+    out["ledger_series"] = [(x.tick, x.backlog + x.in_network) for x in sim.ledger.snapshots]
+    out["wall_s"] = {"resume": wall_ready - wall0, "run": time.perf_counter() - wall_ready}
     return out

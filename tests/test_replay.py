@@ -46,7 +46,8 @@ def _main_and_checkpoint(workdir, scenario, checkpoint_s, continue_to_s, overrid
 
 
 def _same(a, b, keys=None):
-    keys = keys or [k for k in a if k != "warnings"]
+    """Output keys that differ, ignoring wall-clock timings and warning counts."""
+    keys = keys or [k for k in a if k not in ("warnings", "wall_s")]
     return [k for k in keys if a[k] != b[k]]
 
 
