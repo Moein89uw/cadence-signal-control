@@ -12,7 +12,7 @@ Milestone 1 builds a trustworthy simulation foundation. It contains no optimizer
 | --- | --- | --- |
 | 1 | Corridor R-1 network and S0–S3 demand | Done |
 | 2 | Dual-ring actuated-coordinated signal control with pedestrian intervals | Done |
-| 3 | Loop and camera observations (no faults) | Planned |
+| 3 | Loop, radar and camera observations (no faults) | Done |
 | 4 | Vehicle accounting with teleporting disabled | Planned |
 | 5 | Save, restore and one-action counterfactual replay | Planned |
 | 6 | Prediction-model validation against SUMO | Planned |
@@ -45,6 +45,7 @@ python experiments/run_scenario.py --scenario S1   # one run with a safety and t
 
 - `docs/methodology/corridor_r1.md`: how Document Zero is represented in SUMO, and every Milestone 1 assumption.
 - `docs/methodology/signal_control.md`: the baseline actuated-coordinated controller and how it is checked.
+- `docs/methodology/observations.md`: simulated detection (Document Zero 3.6) and the cabinet logs.
 
 ## Ground rules
 

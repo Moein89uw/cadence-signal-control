@@ -1,6 +1,6 @@
 {
   "_about": "Corridor R-1 specification for Milestone 1. Source tags: DZ = Document Zero CAD-000 v0.1 fixed assumption [F]; M1 = modeling assumption added for Milestone 1 where Document Zero is silent. Values tagged M1 are placeholders and must be reviewed before any result is reported.",
-  "version": "r1-m1-0.1",
+  "version": "r1-m1-0.2",
   "units": {"length": "m", "time": "s", "flow": "veh/h"},
   "global": {
     "source": "DZ 3.1-3.2",
@@ -81,5 +81,22 @@
       "S2": {"side_crossing": 40, "mainline_crossing": 60, "I4_mainline_crossing": 250},
       "S3": {"side_crossing": 40, "mainline_crossing": 60, "I4_mainline_crossing": 250}
     }
+  },
+  "detection": {
+    "source": "DZ 3.6 for which detection exists where; zone and loop lengths, the midblock position, radar sampling and the count bin are M1",
+    "stopbar_zone_m": 12.0,
+    "point_loop_m": 1.8,
+    "I1": {
+      "stopbar": "stopbar_loop",
+      "advance_loops": {"approaches": ["EB", "WB"], "distance_m": 100.0},
+      "system_loops": {"between": ["I1", "I2"], "fraction_from_downstream": 0.5}
+    },
+    "I2": {"stopbar": "stopbar_loop"},
+    "I3": {
+      "stopbar": "radar_stopbar",
+      "radar": {"approaches": ["EB", "WB", "SB", "NB"], "range_m": 120.0, "period_s": 0.1},
+      "video_tmc": {"bin_s": 300}
+    },
+    "I4": {"stopbar": "video_presence"}
   }
 }
