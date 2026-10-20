@@ -150,7 +150,7 @@ def _nodes(spec: dict) -> list[tuple[str, float, float, str]]:
         ("B1E", xs["I1"] - 75.0 - off, 0.0, "priority"),
         ("B2E", xs["I2"] - 60.0 - off, 0.0, "priority"),
         ("B3E", xs["I3"] - 40.0 - off, 0.0, "priority"),
-        ("D", xs["I4"] - 120.0 - off, 0.0, "zipper"),
+        ("D", xs["I4"] - 120.0 - off, 0.0, "priority"),
         ("B4E", xs["I4"] - 50.0 - off, 0.0, "priority"),
         ("B4W", xs["I4"] + 60.0 + off, 0.0, "priority"),
         ("B3W", xs["I3"] + 60.0 + off, 0.0, "priority"),
@@ -206,7 +206,9 @@ def _connections(spec: dict) -> list[tuple[str, str, int, int]]:
     for a, b in (("EB0a", "EB0b"), ("EB1a", "EB1b"), ("EB2a", "EB2b"),
                  ("WB4a", "WB4b"), ("WB3a", "WB3b"), ("WB2a", "WB2b"), ("WB1a", "WB1b")):
         cons += [(a, b, 0, 0), (a, b, 1, 1), (a, b, 1, 2)]
-    # EB lane drop (zipper merge) and the I4 left bay after it
+    # EB lane drop (both lanes merge into one at a priority node) and the I4
+    # left bay after it. A zipper node was tried first and produced SUMO
+    # emergency braking at the merge; the priority merge does not.
     cons += [("EB3a", "EB3b", 0, 0), ("EB3a", "EB3b", 1, 0)]
     cons += [("EB3b", "EB3c", 0, 0), ("EB3b", "EB3c", 0, 1)]
     # cross-street bays (1 -> 2 lanes)
@@ -216,6 +218,20 @@ def _connections(spec: dict) -> list[tuple[str, str, int, int]]:
             for leg in ("N", "S"):
                 cons += [(f"{leg}{k}in_a", f"{leg}{k}in_b", 0, 0), (f"{leg}{k}in_a", f"{leg}{k}in_b", 0, 1)]
     return sorted(set(cons))
+
+
+def permissive_left_connections(spec: dict) -> list[tuple[str, str, int, int]]:
+    """Side-street left turns that run permissively (I2). They get no internal
+    junction (contPos=0): a left-turner waits for a gap at the stop line, so
+    it blocks the shared lane behind it and is never trapped inside the
+    junction when its phase ends."""
+    out = []
+    for i in INTERSECTIONS:
+        if spec["cross_streets"][i].get("permissive_left"):
+            for a in ("SB", "NB"):
+                for fl, tl in movement_lanes(i, a, "L", spec):
+                    out.append((approach_edge(i, a, spec), departure_edge(i, DEPARTURE_DIRECTION[(a, "L")]), fl, tl))
+    return out
 
 
 def write_plain_xml(spec: dict, outdir: Path) -> dict[str, Path]:
@@ -233,10 +249,12 @@ def write_plain_xml(spec: dict, outdir: Path) -> dict[str, Path]:
                 f'    <edge id="{e["id"]}" from="{e["from"]}" to="{e["to"]}" numLanes="{e["numLanes"]}" '
                 f'length="{e["length"]:.2f}" speed="{e["speed"]:.2f}" priority="{e["priority"]}"/>\n')
         fh.write("</edges>\n")
+    stop_line_wait = set(permissive_left_connections(spec))
     with open(paths["con"], "w", encoding="utf-8") as fh:
         fh.write("<connections>\n")
         for frm, to, fl, tl in _connections(spec):
-            fh.write(f'    <connection from="{frm}" to="{to}" fromLane="{fl}" toLane="{tl}"/>\n')
+            extra = ' contPos="0"' if (frm, to, fl, tl) in stop_line_wait else ""
+            fh.write(f'    <connection from="{frm}" to="{to}" fromLane="{fl}" toLane="{tl}"{extra}/>\n')
         fh.write("</connections>\n")
     return paths
 

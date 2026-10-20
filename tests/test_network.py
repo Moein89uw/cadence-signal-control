@@ -60,7 +60,10 @@ def test_i3_i4_eastbound_lane_drop(net_lanes, net_root):
     one_lane_section = net_lanes["EB3b"][0] + net_lanes["EB3c"][0]
     assert one_lane_section / JAM == pytest.approx(16)
     node = next(j for j in net_root.findall("junction") if j.get("id") == "D")
-    assert node.get("type") == "zipper"
+    assert node.get("type") == "priority"
+    merges = {(int(c.get("fromLane")), int(c.get("toLane"))) for c in net_root.findall("connection")
+              if c.get("from") == "EB3a" and c.get("to") == "EB3b"}
+    assert merges == {(0, 0), (1, 0)}, "both lanes must merge into the single lane"
 
 
 # DZ 3.3 left-turn bay lengths (m)
@@ -123,3 +126,22 @@ def test_tls_link_counts(net_root, spec):
     for tl in net_root.findall("tlLogic"):
         assert len(tl.find("phase").get("state")) == expected[tl.get("id")]
     assert {tl.get("id") for tl in net_root.findall("tlLogic")} == set(INTERSECTIONS)
+
+
+def test_permissive_lefts_wait_at_the_stop_line(net_root, spec):
+    """I2 side-street lefts are permissive in a shared lane: no internal
+    junction, so a waiting left-turner blocks the lane at the stop line and is
+    never trapped inside the junction at the end of its phase."""
+    from cadence.simulation.network import permissive_left_connections
+
+    perm = set(permissive_left_connections(spec))
+    assert {(c[0], c[1]) for c in perm} == {("N2in", "EB2a"), ("S2in", "WB1a")}
+    cont = {}
+    for j in net_root.findall("junction"):
+        if j.get("id") == "I2":
+            cont = {int(r.get("index")): r.get("cont") for r in j.findall("request")}
+    for c in net_root.findall("connection"):
+        if c.get("tl") == "I2":
+            key = (c.get("from"), c.get("to"), int(c.get("fromLane")), int(c.get("toLane")))
+            if key in perm:
+                assert cont[int(c.get("linkIndex"))] == "0", key

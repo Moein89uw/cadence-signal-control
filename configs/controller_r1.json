@@ -1,0 +1,47 @@
+{
+  "_about": "Actuated-coordinated controller settings for Corridor R-1, Milestone 1. Timing constants (yellow, all-red, minimum greens, walk, pedestrian clearance, LPI, cycle lengths) come from networks/corridor_r1/spec.json (DZ 3.4). Every value in this file is an M1 modeling choice and must be reviewed before results are reported.",
+  "version": "ctrl-m1-0.1",
+  "step_length_s": 0.1,
+  "phase_assignment": {
+    "1": "WB left (protected only)",
+    "2": "EB through and right (coordinated)",
+    "3": "NB left (protected only; 8-phase intersections)",
+    "4": "SB through and right (plus permissive SB left at I2)",
+    "5": "EB left (protected only)",
+    "6": "WB through and right (coordinated)",
+    "7": "SB left (protected only; 8-phase intersections)",
+    "8": "NB through and right (plus permissive NB left at I2)"
+  },
+  "rings": {
+    "1": {"main": [1, 2], "side": [3, 4]},
+    "2": {"main": [5, 6], "side": [7, 8]}
+  },
+  "sequence_note": "Leading mainline lefts (1 before 2, 5 before 6) and leading side lefts (3 before 4, 7 before 8). At 6-phase intersections phases 3 and 7 do not exist.",
+  "pedestrian_phases": {
+    "P2": {"vehicle_phase": 2, "crossing": "side"},
+    "P6": {"vehicle_phase": 6, "crossing": "side"},
+    "P4": {"vehicle_phase": 4, "crossing": "mainline"},
+    "P8": {"vehicle_phase": 8, "crossing": "mainline"}
+  },
+  "lpi_ped_phases": {"I4": ["P4", "P8"]},
+  "coordination": {
+    "coordinated_phases": [2, 6],
+    "cycle_reference": "cycle time 0 is the programmed start of the main group (barrier into phases 1, 2, 5, 6)",
+    "yield_point": "programmed end of coordinated green (fixed in the cycle)",
+    "force_offs": "fixed",
+    "coordinated_rest": "coordinated phases rest in green when no other phase can be served",
+    "offset_method": "eastbound progression at the posted speed, aligned on the programmed start of phase 2"
+  },
+  "actuation": {
+    "detection": "stop-bar presence zone on every lane that feeds a non-coordinated phase",
+    "presence_zone_m": 12.0,
+    "passage_time_s": 2.0,
+    "call_memory": "non-locking for vehicles; pedestrian calls latch until a walk is served"
+  },
+  "options": {
+    "simultaneous_gap_out": true,
+    "dual_entry": false,
+    "pedestrian_recycle": true
+  },
+  "split_method": "Webster-style allocation of effective green in proportion to critical flow ratios from expected movement flows (S2 uses the 17:00-17:45 core), subject to minimum green and pedestrian minimums; rounded to whole seconds"
+}
