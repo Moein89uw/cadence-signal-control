@@ -36,6 +36,21 @@ from cadence.simulation import demand as dm
 from cadence.simulation.network import INTERSECTIONS
 
 
+# Decimal places SUMO uses when writing saved states. SUMO writes a fixed
+# number of decimals, so the default (2), and even 17, lose bits on values
+# below 1 m and break exact restores; 40 also failed (SUMO's writer has its own
+# limits). 25 reproduced runs exactly in every test, including the slow
+# many-checkpoint test under S2 congestion that guards this choice.
+STATE_PRECISION = 25
+
+# SUMO sessions started in this process. libsumo does not fully reset its
+# internal state between sessions: continuing runs are unaffected, but a state
+# saved or loaded by a later session is not exact. Checkpoints and resumes
+# therefore require the first session of a fresh process (see
+# cadence.simulation.replay.in_fresh_process).
+_SUMO_SESSIONS = 0
+
+
 def sumo_seed(scenario: str, replication: int, spec: dict) -> int:
     """SUMO's own random seed (driver imperfection), derived from the master
     seed with a spawn key separate from every demand stream."""
@@ -69,6 +84,26 @@ def lane_predecessors(net_path: Path) -> tuple[dict[str, str], dict[str, float]]
 
 
 @dataclass
+class Checkpoint:
+    tick: int
+    sumo_state: Path
+    detector_reading: dict
+    controllers: dict
+    recorder: dict
+    ledger: dict
+    record: dict
+    last_state: dict
+    config: dict = field(default_factory=dict)
+
+
+def load_checkpoint(path: Path) -> Checkpoint:
+    import pickle
+
+    with open(Path(path).with_suffix(".pkl"), "rb") as fh:
+        return pickle.load(fh)
+
+
+@dataclass
 class RunRecord:
     """What a run produced, for tests and reports."""
     scenario: str
@@ -89,7 +124,7 @@ class CorridorSimulation:
                  end_s: float | None = None, spec: dict | None = None, ctrl_cfg: dict | None = None,
                  plans: dict | None = None, net_path: Path = R1_DIR / "r1.net.xml",
                  extra_sumo_args: tuple[str, ...] = (), presence_audit_every: int = 0,
-                 queue_audit_every: int = 0, signal_override=None):
+                 queue_audit_every: int = 0, signal_override=None, state_precision: int = STATE_PRECISION):
         self.spec = spec or load_spec()
         self.ctrl_cfg = ctrl_cfg or load_controller_config()
         self.plans = plans or load_plans(spec=self.spec, ctrl=self.ctrl_cfg)
@@ -112,27 +147,38 @@ class CorridorSimulation:
         self.queue_audit = {"samples": 0, "mismatches": []}
         # test hook: f(intersection, tick, state, sim) -> state, applied before SUMO sees it
         self.signal_override = signal_override
+        self.state_precision = state_precision
+        self._prefetch: tuple[int, dict] | None = None
+        self.resumed_from: int | None = None   # checkpoint tick, when resumed
+        self._session = 0
         self._started = False
 
     # ------------------------------------------------------------------ setup
     def prepare(self) -> dict[str, Path]:
         files = dm.generate(self.scenario, self.replication, self.workdir, self.spec)
-        self.net_lanes = net_lane_lengths(self.net_path)
-        self.detectors, self.radars = build_layout(self.net_lanes, self.spec, self.ctrl_cfg)
-        files["detectors"] = write_additional(self.workdir / "detectors.add.xml", self.detectors)
+        files["detectors"] = self._prepare_layout()
         return files
 
-    def sumo_command(self, files: dict[str, Path]) -> list[str]:
+    def _prepare_layout(self) -> Path:
+        self.net_lanes = net_lane_lengths(self.net_path)
+        self.detectors, self.radars = build_layout(self.net_lanes, self.spec, self.ctrl_cfg)
+        return write_additional(self.workdir / "detectors.add.xml", self.detectors)
+
+    def sumo_command(self, files: dict[str, Path], begin_s: float | None = None, routes: bool = True,
+                     end_s: float | None = None) -> list[str]:
+        begin_s = self.begin_s if begin_s is None else begin_s
+        end_s = self.end_s if end_s is None else end_s
         return [
-            sumo_bin("sumo"), "-n", str(self.net_path), "-r", str(files["routes"]),
+            sumo_bin("sumo"), "-n", str(self.net_path), *(["-r", str(files["routes"])] if routes else []),
             "-a", str(files["detectors"]),
-            "--begin", f"{self.begin_s:.1f}", "--end", f"{self.end_s:.1f}",
+            "--begin", f"{begin_s:.1f}", "--end", f"{end_s:.1f}",
             "--step-length", f"{self.step_length}",
             "--seed", str(sumo_seed(self.scenario, self.replication, self.spec)),
             "--time-to-teleport", "-1",
             "--collision.action", "warn", "--collision.check-junctions", "true",
             "--no-step-log", "true", "--duration-log.disable", "true",
             "--error-log", str(self.workdir / "sumo_warnings.log"),
+            "--save-state.rng", "true", "--save-state.precision", str(self.state_precision),
             *self.extra_sumo_args,
         ]
 
@@ -141,11 +187,18 @@ class CorridorSimulation:
 
         import libsumo
 
+        global _SUMO_SESSIONS
         os.environ.setdefault("SUMO_HOME", str(sumo_home()))
         files = self.prepare()
         self.files = files
         libsumo.start(self.sumo_command(files))
+        _SUMO_SESSIONS += 1
+        self._session = _SUMO_SESSIONS
         self._started = True
+        self._setup_python_state()
+
+    def _setup_python_state(self) -> None:
+        files = self.files
         self.controllers = build_controllers(self.scenario, self.tick, self.spec, self.ctrl_cfg, self.plans)
         self.signal_maps = all_signal_maps(self.spec, self.ctrl_cfg, self.net_path)
         self.actuation = actuation_map(self.detectors)
@@ -167,11 +220,15 @@ class CorridorSimulation:
         import libsumo
 
         t = self.tick
-        state = self.recorder.read(t)
+        if self._prefetch is not None and self._prefetch[0] == t:
+            state = dict(self._prefetch[1])
+        else:
+            state = self.recorder.read(t)
+        self._prefetch = None
         if self.presence_audit_every:
             self._audit(t, state)
         presses: dict[str, list[str]] = defaultdict(list)
-        for i, p in self._ped_queue.pop(t, ()):
+        for i, p in self._ped_queue.get(t, ()):
             presses[i].append(p)
             self.recorder.ped_press(t, i, p)
         for i, c in self.controllers.items():
@@ -244,6 +301,111 @@ class CorridorSimulation:
                 continue
             audit["mismatches"].append((t, d.id, state[d.id], full))
 
+    def command(self, intersection: str, kind: str, phase: int, duration_s: float = 0.1) -> None:
+        """Send an external command to one controller; it applies from the
+        next tick (see ActuatedCoordinatedController.command)."""
+        c = self.controllers[intersection]
+        c.t = self.tick
+        c.command(kind, phase, int(round(duration_s * TICKS_PER_S)))
+
+    # ------------------------------------------------------------------ save and resume
+    def checkpoint(self, path: Path | None = None) -> "Checkpoint":
+        """Save the whole simulation at the boundary before tick `self.tick`:
+        SUMO's state (vehicles, insertion backlog, random number generators,
+        written by SUMO) and every piece of Python state, pickled next to it.
+        The detectors are read for this tick first and the reading is kept,
+        because a resumed SUMO cannot report the previous step's detector
+        values. The run continues unaffected."""
+        import libsumo
+
+        if self._session != 1:
+            raise RuntimeError("an exact checkpoint needs the first SUMO session in its process; "
+                               "run the simulation with cadence.simulation.replay.in_fresh_process")
+        if self._prefetch is None or self._prefetch[0] != self.tick:
+            self._prefetch = (self.tick, dict(self.recorder.read(self.tick)))
+        path = Path(path or self.workdir / f"checkpoint_{self.tick}.xml")
+        libsumo.simulation.saveState(str(path))
+        rec = self.record
+        cp = Checkpoint(
+            tick=self.tick, sumo_state=path, detector_reading=dict(self._prefetch[1]),
+            controllers={i: c.snapshot() for i, c in self.controllers.items()},
+            recorder=self.recorder.snapshot(), ledger=self.ledger.snapshot(),
+            record=dict(state_changes={i: len(v) for i, v in rec.state_changes.items()},
+                        collisions=len(rec.collisions), teleports=rec.teleports,
+                        emergency_stops=rec.emergency_stops, arrived=rec.arrived,
+                        departed=rec.departed, end_tick=rec.end_tick),
+            last_state=dict(self._last_state),
+            config=dict(scenario=self.scenario, replication=self.replication, begin_s=self.begin_s,
+                        end_s=self.end_s, spec=self.spec, ctrl_cfg=self.ctrl_cfg, plans=self.plans,
+                        net_path=self.net_path, state_precision=self.state_precision,
+                        signal_override=self.signal_override, files=dict(self.files)),
+        )
+        import pickle
+
+        with open(path.with_suffix(".pkl"), "wb") as fh:
+            pickle.dump(cp, fh)
+        return cp
+
+    @classmethod
+    def resume(cls, cp: "Checkpoint", workdir: Path, routes: bool = True, remove_vehicles: tuple[str, ...] = (),
+               end_s: float | None = None, extra_sumo_args: tuple[str, ...] = ()) -> "CorridorSimulation":
+        """Continue a checkpointed run. SUMO starts once, directly from the
+        saved state; this must be the first SUMO session in the process (use
+        cadence.simulation.replay.in_fresh_process). Outputs (logs, events,
+        ledger rows) contain only what happens after the checkpoint;
+        cumulative counters continue from it. `routes=False` loads no further
+        demand; `remove_vehicles` drops vehicles from the saved state."""
+        import os
+
+        import libsumo
+
+        global _SUMO_SESSIONS
+        if _SUMO_SESSIONS:
+            raise RuntimeError("an exact resume must be the first SUMO session in its process; "
+                               "use cadence.simulation.replay.in_fresh_process")
+        c = cp.config
+        sim = cls(c["scenario"], c["replication"], workdir, begin_s=c["begin_s"],
+                  end_s=c["end_s"] if end_s is None else end_s, spec=c["spec"], ctrl_cfg=c["ctrl_cfg"],
+                  plans=c["plans"], net_path=c["net_path"], extra_sumo_args=extra_sumo_args,
+                  signal_override=c["signal_override"], state_precision=c["state_precision"])
+        os.environ.setdefault("SUMO_HOME", str(sumo_home()))
+        files = dict(c["files"])
+        files["detectors"] = sim._prepare_layout()
+        sim.files = files
+        cmd = sim.sumo_command(files, begin_s=cp.tick / TICKS_PER_S, routes=routes) + ["--load-state", str(cp.sumo_state)]
+        if remove_vehicles:
+            cmd += ["--load-state.remove-vehicles", ",".join(remove_vehicles)]
+        libsumo.start(cmd)
+        _SUMO_SESSIONS += 1
+        sim._session = _SUMO_SESSIONS
+        sim._started = True
+        sim.record = RunRecord(sim.scenario, sim.replication, cp.tick)
+        sim._setup_python_state()
+        sim._apply_checkpoint(cp)
+        sim.resumed_from = cp.tick
+        return sim
+
+    def _apply_checkpoint(self, cp: "Checkpoint") -> None:
+        import libsumo
+
+        self.tick = cp.tick
+        for i, c in self.controllers.items():
+            c.restore(cp.controllers[i])
+        self.recorder.restore(cp.recorder)
+        self.ledger.restore(cp.ledger)
+        rec, r = self.record, cp.record
+        for i in list(rec.state_changes):
+            del rec.state_changes[i][r["state_changes"].get(i, 0):]
+        del rec.collisions[r["collisions"]:]
+        rec.teleports, rec.emergency_stops = r["teleports"], r["emergency_stops"]
+        rec.arrived, rec.departed, rec.end_tick = r["arrived"], r["departed"], r["end_tick"]
+        self._last_state = dict(cp.last_state)
+        self._prefetch = (cp.tick, dict(cp.detector_reading))
+        # a resumed SUMO shows its static programs until told otherwise
+        for i, state in self._last_state.items():
+            if state is not None:
+                libsumo.trafficlight.setRedYellowGreenState(i, state)
+
     def run_until(self, end_s: float | None = None) -> RunRecord:
         end_tick = int(round((self.end_s if end_s is None else end_s) * TICKS_PER_S))
         while self.tick < end_tick:
@@ -281,6 +443,9 @@ class CorridorSimulation:
                             round(d.end_m, 2), round(d.distance_m, 2), d.phase if d.phase is not None else ""])
         return out
 
+    def _collect_warnings(self) -> dict[str, list[str]]:
+        return parse_sumo_warnings(self.workdir / "sumo_warnings.log")
+
     def write_ledger(self) -> Path:
         path = self.workdir / "ledger.csv"
         with open(path, "w", newline="", encoding="utf-8") as fh:
@@ -296,7 +461,7 @@ class CorridorSimulation:
 
             libsumo.close()
             self._started = False
-            self.record.warnings = parse_sumo_warnings(self.workdir / "sumo_warnings.log")
+            self.record.warnings = self._collect_warnings()
             self.write_observations()
             self.write_ledger()
 
@@ -310,7 +475,8 @@ class CorridorSimulation:
 
 def parse_sumo_warnings(path: Path) -> dict[str, list[str]]:
     """Group SUMO warnings by kind (emergency braking, collision, teleport, other)."""
-    out: dict[str, list[str]] = {"emergency_braking": [], "collision": [], "teleport": [], "other": []}
+    out: dict[str, list[str]] = {"emergency_braking": [], "collision": [], "teleport": [], "state_load": [],
+                                 "other": []}
     if not Path(path).exists():
         return out
     for line in Path(path).read_text(encoding="utf-8", errors="replace").splitlines():
@@ -322,6 +488,8 @@ def parse_sumo_warnings(path: Path) -> dict[str, list[str]]:
             out["collision"].append(line)
         elif "eleport" in line:
             out["teleport"].append(line)
+        elif "in loaded state" in line:
+            out["state_load"].append(line)
         else:
             out["other"].append(line)
     return out
