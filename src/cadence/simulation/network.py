@@ -254,6 +254,8 @@ def write_plain_xml(spec: dict, outdir: Path) -> dict[str, Path]:
         fh.write("<connections>\n")
         for frm, to, fl, tl in _connections(spec):
             extra = ' contPos="0"' if (frm, to, fl, tl) in stop_line_wait else ""
+            # no lane changes inside junctions (only emergency vehicles may)
+            extra += ' changeLeft="emergency" changeRight="emergency"'
             fh.write(f'    <connection from="{frm}" to="{to}" fromLane="{fl}" toLane="{tl}"{extra}/>\n')
         fh.write("</connections>\n")
     return paths

@@ -145,3 +145,18 @@ def test_permissive_lefts_wait_at_the_stop_line(net_root, spec):
             key = (c.get("from"), c.get("to"), int(c.get("fromLane")), int(c.get("toLane")))
             if key in perm:
                 assert cont[int(c.get("linkIndex"))] == "0", key
+
+
+
+def test_no_lane_changes_inside_junctions(net_root):
+    """Junction lanes allow lane changes only for emergency vehicles, so
+    passenger cars never change lanes inside an intersection."""
+    multi = [e for e in net_root.findall("edge") if e.get("function") == "internal" and len(e.findall("lane")) > 1]
+    assert multi
+    for e in multi:
+        for lane in e.findall("lane"):
+            assert lane.get("changeLeft") == "emergency" and lane.get("changeRight") == "emergency", lane.get("id")
+    # every other junction lane is alone on its edge, so no lane change is possible there
+    for e in net_root.findall("edge"):
+        if e.get("function") == "internal" and len(e.findall("lane")) == 1 and e.find("lane").get("changeLeft") is None:
+            assert e not in multi
