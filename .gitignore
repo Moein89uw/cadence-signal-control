@@ -9,3 +9,4 @@ dist/
 runs/
 *.state.xml
 *.state.xml.gz
+.pytest_cache/
